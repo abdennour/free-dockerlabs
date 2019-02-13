@@ -1,0 +1,86 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Master stack: PathToMasterStackFile'
+
+Parameters:
+  SSHKey:
+    Type: AWS::EC2::KeyPair::KeyName
+
+Mappings:
+  byRegion:
+    us-east-1:
+      ubuntu18: ami-0ac019f4fcb7cb7e6
+    eu-north-1:
+      ubuntu18: ami-34c14f4a
+Resources:
+  Machine:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: m5.large
+      KeyName: !Ref SSHKey
+      ImageId: !FindInMap [byRegion, !Ref 'AWS::Region', ubuntu18]
+      SecurityGroupIds:
+        - !GetAtt Firewall.GroupId
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash -xe
+          # --- @author Abdennour TOUMI <in.abdennoor.com>
+
+
+          # --- All system packages have been updated to most recent versions.
+          apt-get update -y;
+
+
+          # --- Install dependencies
+          apt-get remove docker docker-engine docker.io -y;
+
+          apt-get install \
+              apt-transport-https \
+              ca-certificates \
+              curl \
+              software-properties-common \
+              git -y
+
+          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+
+          add-apt-repository \
+            "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+            $(lsb_release -cs) \
+            stable"
+
+          apt-get update -y;
+          apt-get install -y docker-ce;
+
+          # add user to docker group
+          usermod -aG docker $USER;
+          # Install docker-compose
+          curl -L https://github.com/docker/compose/releases/download/1.23.2/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
+          chmod +x /usr/local/bin/docker-compose
+          # test
+          docker run -p9876:80 -d nginx; 
+
+
+  Firewall:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow web and ssh users to access
+      SecurityGroupIngress:
+      - CidrIp: 0.0.0.0/0
+        Description: Allow HTTP access
+        FromPort: 80
+        IpProtocol: tcp
+        ToPort: 80
+      - CidrIp: 0.0.0.0/0
+        Description: Allow other HTTP access
+        FromPort: 8000
+        IpProtocol: tcp
+        ToPort: 9999
+      - CidrIp: 0.0.0.0/0
+        Description: Allow SSH access
+        FromPort: 22
+        IpProtocol: tcp
+        ToPort: 22
+Outputs:
+  SSHCmd:
+    Value:
+      !Sub 'ssh -i $SSH_KEY ubuntu@${Machine.PublicDnsName}'
