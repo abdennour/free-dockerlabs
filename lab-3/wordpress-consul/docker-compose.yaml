@@ -23,10 +23,11 @@ services:
      ports:
        - "8000:80"
      restart: always
-     dns: 172.17.0.2
+     dns: 172.17.0.2 # if consul agent expose 53 on 53, use ip in (ifconfig docker0), otherwise use IP of agent itself
      environment:
        SERVICE_80_NAME: wordpress  
-       WORDPRESS_DB_HOST: mysql:3306 # should match SERVICE_3306_NAME which registred in Consul
+       # mysql.service.DC1.consul (DC1 = datacenter name)
+       WORDPRESS_DB_HOST: mysql.service.consul:3306 # should match SERVICE_3306_NAME which registred in Consul 
        WORDPRESS_DB_USER: wordpress
        WORDPRESS_DB_PASSWORD: wordpress
        WORDPRESS_DB_NAME: wordpress
