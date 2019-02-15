@@ -25,6 +25,7 @@ services:
      restart: always
      dns: 172.17.0.2
      environment:
+       SERVICE_80_NAME: wordpress  
        WORDPRESS_DB_HOST: db:3306
        WORDPRESS_DB_USER: wordpress
        WORDPRESS_DB_PASSWORD: wordpress
