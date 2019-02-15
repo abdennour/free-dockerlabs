@@ -1,4 +1,4 @@
-FROM jenkins
+FROM jenkins/jenkins
 
 LABEL  maintainer="mail@abdennoor.com"
 ENV REFRESHED_AT 2019-02-13
@@ -12,4 +12,4 @@ RUN mv docker/* /usr/bin/
 
 USER jenkins
 
-RUN /usr/local/bin/install-plugins.sh junit git git-client ssh-slaves greenballs chucknorris ws-cleanup
+RUN /usr/local/bin/install-plugins.sh junit git git-client ssh-slaves greenballs chucknorris ws-cleanup blueocean
